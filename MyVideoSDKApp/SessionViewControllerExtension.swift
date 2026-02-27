@@ -62,6 +62,37 @@ extension SessionViewController {
         let leaveSessionBarItem = UITabBarItem(title: "Leave Session", image: UIImage(systemName: "phone.down"), tag: ControlOption.leaveSession.rawValue)
         tabBar.items = [toggleVideoBarItem, toggleAudioBarItem, leaveSessionBarItem]
     }
+    
+    func presentJWTAlert() {
+        let alert = UIAlertController(
+            title: "JWT Token Required",
+            message: "You can choose to copy and paste your generated JWT Token here OR leave it empty if you have added it in the SessionView+Extension jwtToken variable.",
+            preferredStyle: .alert
+        )
+        
+        // Add TextField
+        alert.addTextField { textField in
+            textField.placeholder = "Enter your JWT Token"
+            textField.autocorrectionType = .no
+            textField.autocapitalizationType = .none
+        }
+        
+        // Join button
+        let joinAction = UIAlertAction(title: "Join", style: .default) { _ in
+            self.userInputJWT = alert.textFields?.first?.text ?? ""
+            self.joinSession()
+        }
+        
+        // Cancel button
+        let cancelAction = UIAlertAction(title: "Cancel", style: .cancel) { _ in
+            self.dismiss(animated: true)
+        }
+        
+        alert.addAction(joinAction)
+        alert.addAction(cancelAction)
+        
+        present(alert, animated: true)
+    }
 
     func addLocalViewToGrid() {
         let containerView = UIView()

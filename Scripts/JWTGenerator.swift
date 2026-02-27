@@ -6,11 +6,70 @@ import CryptoKit
 /// 
 /// Usage:
 ///   swift Scripts/JWTGenerator.swift <sessionName> <role> <sdkKey> <sdkSecret>
+///   OR
+///   Enter the info in the .env file and use swift Scripts/JWTGenerator.swift
 ///
 /// Example:
 ///   swift Scripts/JWTGenerator.swift TestSession12345 1 YourSDKKey YourSDKSecret
+///   OR
+///   Enter the info in the .env file and use swift Scripts/JWTGenerator.swift
+
+private func defaultDotEnvPath() -> String {
+    let scriptPath = #file
+    let scriptURL = URL(fileURLWithPath: scriptPath)
+    let dirURL = scriptURL.deletingLastPathComponent()
+    return dirURL.appendingPathComponent(".env").path
+}
+
+private func loadDotEnv(from path: String) -> [String: String] {
+    guard let data = FileManager.default.contents(atPath: path),
+          let content = String(data: data, encoding: .utf8) else {
+        return [:]
+    }
+
+    var result: [String: String] = [:]
+
+    for rawLine in content.components(separatedBy: .newlines) {
+        let line = rawLine.trimmingCharacters(in: .whitespacesAndNewlines)
+
+        // Ignore empty lines and comments
+        if line.isEmpty || line.hasPrefix("#") {
+            continue
+        }
+
+        let parts = line.split(separator: "=", maxSplits: 1, omittingEmptySubsequences: false)
+        guard parts.count == 2 else { continue }
+
+        let key = parts[0].trimmingCharacters(in: .whitespacesAndNewlines)
+        var value = parts[1].trimmingCharacters(in: .whitespacesAndNewlines)
+
+        // Strip surrounding quotes if present
+        if (value.hasPrefix("\"") && value.hasSuffix("\"")) || (value.hasPrefix("'") && value.hasSuffix("'")) {
+            value = String(value.dropFirst().dropLast())
+        }
+
+        if !key.isEmpty {
+            result[key] = value
+        }
+    }
+
+    return result
+}
+
+private func mergedEnvironment(dotEnvPath: String) -> [String: String] {
+    var env = ProcessInfo.processInfo.environment
+    let dotEnv = loadDotEnv(from: dotEnvPath)
+
+    // Values already present in the process environment win over .env
+    for (key, value) in dotEnv where env[key] == nil {
+        env[key] = value
+    }
+
+    return env
+}
 
 func main() {
+    let env = mergedEnvironment(dotEnvPath: defaultDotEnvPath())
     let sessionName: String
     let role: Int
     let sdkKey: String
@@ -21,10 +80,10 @@ func main() {
         role = Int(CommandLine.arguments[2]) ?? 1
         sdkKey = CommandLine.arguments[3]
         sdkSecret = CommandLine.arguments[4]
-    } else if let sn = ProcessInfo.processInfo.environment["SESSION_NAME"],
-              let r = ProcessInfo.processInfo.environment["ROLE"].flatMap(Int.init),
-              let key = ProcessInfo.processInfo.environment["SDK_KEY"],
-              let secret = ProcessInfo.processInfo.environment["SDK_SECRET"] {
+    } else if let sn = env["SESSION_NAME"],
+              let r = env["ROLE"].flatMap(Int.init),
+              let key = env["SDK_KEY"],
+              let secret = env["SDK_SECRET"] {
         sessionName = sn
         role = r
         sdkKey = key

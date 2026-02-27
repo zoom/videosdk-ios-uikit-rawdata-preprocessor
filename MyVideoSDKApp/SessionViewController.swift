@@ -6,19 +6,23 @@ enum ControlOption: Int {
 }
 
 class SessionViewController: UIViewController {
-    
+    // MARK: Session Information
+
     /*
-     You should sign your JWT with a backend service in a production use-case
-     For faster JWT generation, you can navigate checkout the JWTGenerator.swift under Script folder and its README for more details on how to consume it. Once you got the token, you can simple copy and paste it below.
+     TODO: Enter the following variables needed to initialize the VSDK and to start/join a session
+     You should sign your JWT with a backend service in a production use-case. For faster JWT generation, you can navigate checkout the JWTGenerator.swift under Script folder and its README for more details on how to consume it.
+     Once you got the token, you can simple copy and paste it below.
      Ensure that the sessionName matches the session name used to generate the JWT Token.
      */
-    let jwtToken = <#Your JWT Token#>
-    let sessionName = <#Session Name#>
-    let userName = <#Username#> // Display name
+    let jwtToken = "" // Leave this as empty if you choose to copy and paste your generated JWT token directly in the sample app's alert box after clicking on "Join Session"
+    let sessionName = "" // Also known as tpc in JWT
+    let userName = "" // Display name
 
     // MARK: - Properties
+    
     let videoViewAspectRatio: CGFloat = 1.0
     var loadingLabel: UILabel = .init()
+    var userInputJWT = ""
     var scrollView: UIScrollView = .init()
     var videoStackView: UIStackView = .init()
     var remoteUserViews: [Int: (view: UIView, placeholder: UIView)] = [:]
@@ -27,41 +31,46 @@ class SessionViewController: UIViewController {
     var tabBar: UITabBar = .init()
     var toggleVideoBarItem: UITabBarItem = .init(title: "Stop Video", image: UIImage(systemName: "video.slash"), tag: ControlOption.toggleVideo.rawValue)
     var toggleAudioBarItem: UITabBarItem = .init(title: "Mute", image: UIImage(systemName: "mic.slash"), tag: ControlOption.toggleAudio.rawValue)
-
+    
+    private let preprocessor = MetalRedPreprocessor()
+    
     // MARK: - Lifecycle Methods
 
     override func viewDidLoad() {
         super.viewDidLoad()
         setupUI()
         ZoomVideoSDK.shareInstance()?.delegate = self
+        
     }
 
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
-        Task {
-            await joinSession()
-        }
+        presentJWTAlert()
     }
 
     // MARK: - Private Methods
 
-    private func joinSession() async {
+    func joinSession() {
         let sessionContext = ZoomVideoSDKSessionContext()
-        sessionContext.token = jwtToken
+        sessionContext.token = jwtToken.isEmpty ? userInputJWT : jwtToken
         sessionContext.sessionName = sessionName
         sessionContext.userName = userName
+        sessionContext.preProcessorDelegate = self
         if ZoomVideoSDK.shareInstance()?.joinSession(sessionContext) == nil {
             print("Join session failed")
-            showError(message: "Failed to join session")
+            showError(message: "Failed to join session", dismiss: true)
             return
         }
+        
     }
 
-    private func showError(message: String) {
+    public func showError(message: String, dismiss: Bool = false) {
         Task { @MainActor in
             let alert = UIAlertController(title: "Error", message: message, preferredStyle: .alert)
             alert.addAction(UIAlertAction(title: "OK", style: .default) { _ in
-                self.dismiss(animated: true)
+                if dismiss {
+                    self.dismiss(animated: true)
+                }
             })
             present(alert, animated: true)
         }
@@ -116,14 +125,29 @@ extension SessionViewController: ZoomVideoSDKDelegate {
     func onUserVideoStatusChanged(_: ZoomVideoSDKVideoHelper?, user: [ZoomVideoSDKUser]?) {
         guard let users = user,
               let myself = ZoomVideoSDK.shareInstance()?.getSession()?.getMySelf() else { return }
-
-        for user in users where user.getID() != myself.getID() {
-            if let canvas = user.getVideoCanvas(),
-               let isVideoOn = canvas.videoStatus()?.on,
-               let views = remoteUserViews[user.getID()]
-            {
-                Task(priority: .background) {
-                    views.placeholder.isHidden = isVideoOn
+        
+        for user in users {
+            if user.getID() == myself.getID() {
+                if let canvas = user.getVideoCanvas(),
+                   let isVideoOn = canvas.videoStatus()?.on {
+                    Task(priority: .background) {
+                        if isVideoOn {
+                            canvas.subscribe(with: self.localView, aspectMode: .panAndScan, andResolution: ._Auto)
+                        } else {
+                            canvas.unSubscribe(with: self.localView)
+                        }
+                        self.localPlaceholder?.isHidden = isVideoOn
+                        self.toggleVideoBarItem.title = isVideoOn ? "Stop Video" : "Start Video"
+                        self.toggleVideoBarItem.image = UIImage(systemName: isVideoOn ? "video.slash" : "video")
+                    }
+                }
+            } else {
+                if let canvas = user.getVideoCanvas(),
+                   let isVideoOn = canvas.videoStatus()?.on,
+                   let views = remoteUserViews[user.getID()] {
+                    Task(priority: .background) {
+                        views.placeholder.isHidden = isVideoOn
+                    }
                 }
             }
         }
@@ -167,6 +191,15 @@ extension SessionViewController: ZoomVideoSDKDelegate {
     }
 }
 
+// MARK: - ZoomVideoSDKVideoSourcePreProcessor
+
+extension SessionViewController: ZoomVideoSDKVideoSourcePreProcessor {
+    func onPreProcessRawData(_ rawData: ZoomVideoSDKPreProcessRawData?) {
+        guard let raw = rawData else { return }
+        preprocessor.process(rawData: raw)
+    }
+}
+
 // MARK: - UITabBarDelegate
 
 extension SessionViewController: UITabBarDelegate {
@@ -187,7 +220,11 @@ extension SessionViewController: UITabBarDelegate {
     }
 
     private func handleVideoToggle(_ tabBar: UITabBar) {
-        tabBar.items![ControlOption.toggleVideo.rawValue].isEnabled = false
+        #if targetEnvironment(simulator)
+        showError(message: "Simulator detected, video is not supported")
+        #else
+        // your real device code
+        toggleVideoBarItem.isEnabled = false
 
         guard let canvas = ZoomVideoSDK.shareInstance()?.getSession()?.getMySelf()?.getVideoCanvas(),
               let videoHelper = ZoomVideoSDK.shareInstance()?.getVideoHelper(),
@@ -202,7 +239,8 @@ extension SessionViewController: UITabBarDelegate {
             self.localPlaceholder?.isHidden = newVideoState
         }
 
-        tabBar.items![ControlOption.toggleVideo.rawValue].isEnabled = true
+        toggleVideoBarItem.isEnabled = true
+        #endif
     }
 
     private func handleAudioToggle(_ tabBar: UITabBar) {

@@ -4,7 +4,26 @@ This script generates Zoom Video SDK JWT tokens from the command line using swif
 
 ## Usage
 
-### Command-line arguments
+You can choose to either add the information needed to create the JWT tokens using .env file or through arguments.
+
+### Comment-line with .env variables
+
+In the .env file, ensure that these 4 variables are filled up.
+
+```bash
+SESSION_NAME=
+ROLE=
+SDK_KEY=
+SDK_SECRET=
+```
+
+To generate JWT Token:
+
+```bash
+swift Scripts/JWTGenerator.swift
+```
+
+### Command-line with arguments
 
 ```bash
 swift Scripts/JWTGenerator.swift <sessionName> <role> <sdkKey> <sdkSecret>
