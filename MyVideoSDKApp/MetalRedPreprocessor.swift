@@ -9,6 +9,12 @@ final class MetalRedPreprocessor: NSObject {
     private let commandQueue: MTLCommandQueue
     private let computePipeline: MTLComputePipelineState
 
+    /*
+     Initialization:
+     - Creates a MTLDevice and MTLCommandQueue
+     - Loads the `tint_red_yuv` in `RedTint.metal`
+     - Builds a compute pipeline state
+     */
     override init() {
         guard let device = MTLCreateSystemDefaultDevice(),
               let commandQueue = device.makeCommandQueue()
@@ -28,9 +34,12 @@ final class MetalRedPreprocessor: NSObject {
         super.init()
     }
 
-    // Entry point from Zoom preprocessor
-    
+    /*
+     Entry point from Zoom preprocessor - This method is called by the Zoom VSDK every time a video frame is ready to be pre-processed.
+     
+    */
     func process(rawData: ZoomVideoSDKPreProcessRawData) {
+        // Extract Frame Metadata
         let width = Int(rawData.size.width)
         let height = Int(rawData.size.height)
 
@@ -38,6 +47,7 @@ final class MetalRedPreprocessor: NSObject {
         let uStride = Int(rawData.uStride)
         let vStride = Int(rawData.vStride)
         
+        // Allocate Temporary Memory
         guard let yPlane = malloc(yStride * height)?.assumingMemoryBound(to: UInt8.self),
               let uPlane = malloc(uStride * (height / 2))?.assumingMemoryBound(to: UInt8.self),
               let vPlane = malloc(vStride * (height / 2))?.assumingMemoryBound(to: UInt8.self)
@@ -49,6 +59,7 @@ final class MetalRedPreprocessor: NSObject {
             free(vPlane)
         }
         
+        // Copy Data From Zoom Buffers
         for line in 0..<height {
             guard let src = rawData.getYBuffer(Int32(line)) else { continue }
             memcpy(yPlane.advanced(by: line * yStride), src, yStride)
@@ -65,6 +76,7 @@ final class MetalRedPreprocessor: NSObject {
             }
         }
 
+        // GPU Processing
         processYUV(
             y: yPlane,
             u: uPlane,
@@ -76,6 +88,7 @@ final class MetalRedPreprocessor: NSObject {
             vStride: vStride
         )
         
+        // After GPU processing - We copy back to Zoom's VSDK pre-processing
         for line in 0..<height {
             guard let dst = rawData.getYBuffer(Int32(line)) else { continue }
             memcpy(dst, yPlane.advanced(by: line * yStride), yStride)
@@ -122,7 +135,7 @@ final class MetalRedPreprocessor: NSObject {
             yStride: UInt32(yStride),
             uStride: UInt32(uStride),
             vStride: UInt32(vStride),
-            mixFactor: 0.5,   // 50% red
+            mixFactor: 0.5, // 50% red
             uRed: 90.0,
             vRed: 240.0
         )

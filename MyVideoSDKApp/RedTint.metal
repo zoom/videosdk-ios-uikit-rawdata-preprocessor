@@ -12,7 +12,6 @@ struct YUVParams {
     float vRed;
 };
 
-// Compute kernel that tints U/V towards red for 4:2:0 YUV
 kernel void tint_red_yuv(
     device uint8_t *yPlane [[buffer(0)]],
     device uint8_t *uPlane [[buffer(1)]],
@@ -25,11 +24,18 @@ kernel void tint_red_yuv(
     uint x = gid.x;
     uint y = gid.y;
 
-    // Y is left unchanged
+    // Leaves the Y (luminance / brightness) channel unchanged
     uint yIndex = y * params.yStride + x;
     (void)yPlane[yIndex];
 
-    // For 4:2:0 chroma, update one U/V sample per 2x2 block
+    /*
+     Blends the U and V (chroma / color) channels toward red
+     Compute kernel that tints U/V towards red for 4:2:0 YUV
+     
+     In 4:2:0:
+      - Each 2×2 block of pixels shares one U and one V value
+      - That’s why the shader updates U/V only when (x % 2u == 0u) && (y % 2u == 0u)
+     */
     if ((x % 2u == 0u) && (y % 2u == 0u)) {
         uint uvX = x / 2u;
         uint uvY = y / 2u;
