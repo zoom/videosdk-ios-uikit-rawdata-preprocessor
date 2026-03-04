@@ -32,7 +32,7 @@ class SessionViewController: UIViewController {
     var toggleVideoBarItem: UITabBarItem = .init(title: "Stop Video", image: UIImage(systemName: "video.slash"), tag: ControlOption.toggleVideo.rawValue)
     var toggleAudioBarItem: UITabBarItem = .init(title: "Mute", image: UIImage(systemName: "mic.slash"), tag: ControlOption.toggleAudio.rawValue)
     
-    private let preprocessor = MetalRedPreprocessor()
+    private let preprocessor = MetalLUTPreprocessor(cubeName: "ExampleLUT")
     
     // MARK: - Lifecycle Methods
 
