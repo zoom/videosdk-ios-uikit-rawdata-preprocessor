@@ -15,6 +15,9 @@
 		818048702A8397AD00AC891F /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 8180486E2A8397AD00AC891F /* Main.storyboard */; };
 		818048722A8397AE00AC891F /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 818048712A8397AE00AC891F /* Assets.xcassets */; };
 		818048752A8397AE00AC891F /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 818048732A8397AE00AC891F /* LaunchScreen.storyboard */; };
+		CC00000100000001000000A1 /* LUT.metal in Sources */ = {isa = PBXBuildFile; fileRef = CC00000100000001000000A2 /* LUT.metal */; };
+		CC00000100000001000000A3 /* MetalLUTPreprocessor.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC00000100000001000000A4 /* MetalLUTPreprocessor.swift */; };
+		CC00000100000001000000A5 /* ExampleLUT.cube in Resources */ = {isa = PBXBuildFile; fileRef = CC00000100000001000000A6 /* ExampleLUT.cube */; };
 		D70470BC2F2A55CD00DF6E54 /* ZoomTask in Frameworks */ = {isa = PBXBuildFile; productRef = D70470BB2F2A55CD00DF6E54 /* ZoomTask */; };
 		D70470BE2F2A55CD00DF6E54 /* ZoomVideoSDK in Frameworks */ = {isa = PBXBuildFile; productRef = D70470BD2F2A55CD00DF6E54 /* ZoomVideoSDK */; };
 		D796C5E92F4E0C3700E09C9D /* ZoomTask in Frameworks */ = {isa = PBXBuildFile; productRef = D796C5E82F4E0C3700E09C9D /* ZoomTask */; };
@@ -52,6 +55,9 @@
 		818048712A8397AE00AC891F /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		818048742A8397AE00AC891F /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		818048762A8397AE00AC891F /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		CC00000100000001000000A2 /* LUT.metal */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.metal; path = LUT.metal; sourceTree = "<group>"; };
+		CC00000100000001000000A4 /* MetalLUTPreprocessor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MetalLUTPreprocessor.swift; sourceTree = "<group>"; };
+		CC00000100000001000000A6 /* ExampleLUT.cube */ = {isa = PBXFileReference; lastKnownFileType = text; path = ExampleLUT.cube; sourceTree = "<group>"; };
 		D796C7482F51863C00E09C9D /* RedTint.metal */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.metal; path = RedTint.metal; sourceTree = "<group>"; };
 		D796C74A2F51866C00E09C9D /* MetalRedPreprocessor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MetalRedPreprocessor.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -93,6 +99,9 @@
 			children = (
 				D796C74A2F51866C00E09C9D /* MetalRedPreprocessor.swift */,
 				D796C7482F51863C00E09C9D /* RedTint.metal */,
+				CC00000100000001000000A2 /* LUT.metal */,
+				CC00000100000001000000A4 /* MetalLUTPreprocessor.swift */,
+				CC00000100000001000000A6 /* ExampleLUT.cube */,
 				818048682A8397AD00AC891F /* AppDelegate.swift */,
 				8180486A2A8397AD00AC891F /* SceneDelegate.swift */,
 				8180486C2A8397AD00AC891F /* StartViewController.swift */,
@@ -183,6 +192,7 @@
 				818048752A8397AE00AC891F /* LaunchScreen.storyboard in Resources */,
 				818048722A8397AE00AC891F /* Assets.xcassets in Resources */,
 				818048702A8397AD00AC891F /* Main.storyboard in Resources */,
+				CC00000100000001000000A5 /* ExampleLUT.cube in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -200,6 +210,8 @@
 				818048692A8397AD00AC891F /* AppDelegate.swift in Sources */,
 				8180486B2A8397AD00AC891F /* SceneDelegate.swift in Sources */,
 				D796C7492F51863E00E09C9D /* RedTint.metal in Sources */,
+				CC00000100000001000000A1 /* LUT.metal in Sources */,
+				CC00000100000001000000A3 /* MetalLUTPreprocessor.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
