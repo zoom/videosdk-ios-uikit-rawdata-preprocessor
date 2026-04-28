@@ -2,6 +2,9 @@ import UIKit
 import ZoomVideoSDK
 
 class StartViewController: UIViewController {
+    
+    // MARK: - Properties
+    
     var enterSessionButton: UIButton!
 
     private func setupSDK() {

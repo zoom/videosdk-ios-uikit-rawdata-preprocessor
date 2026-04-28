@@ -32,7 +32,7 @@ class SessionViewController: UIViewController {
     var toggleVideoBarItem: UITabBarItem = .init(title: "Stop Video", image: UIImage(systemName: "video.slash"), tag: ControlOption.toggleVideo.rawValue)
     var toggleAudioBarItem: UITabBarItem = .init(title: "Mute", image: UIImage(systemName: "mic.slash"), tag: ControlOption.toggleAudio.rawValue)
     
-    private let preprocessor = MetalLUTPreprocessor(cubeName: "ExampleLUT")
+    private var preprocessor:MetalLUTPreprocessor? = MetalLUTPreprocessor(cubeName: "ExampleLUT")
     
     // MARK: - Lifecycle Methods
 
@@ -196,7 +196,11 @@ extension SessionViewController: ZoomVideoSDKDelegate {
 extension SessionViewController: ZoomVideoSDKVideoSourcePreProcessor {
     func onPreProcessRawData(_ rawData: ZoomVideoSDKPreProcessRawData?) {
         guard let raw = rawData else { return }
-        preprocessor.process(rawData: raw)
+        self.preprocessor?.process(rawData: raw)
+        DispatchQueue.main.asyncAfter(deadline: .now() + 5) {
+            // run code just to see the LUT difference
+            self.preprocessor = nil
+        }
     }
 }
 
